@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <title>oneofusinnovation</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+
+
+</head>
+
+<body>
+{% include "navbar.html" %}
+<div class="container my-3">
+    <table class="table">
+        <thead>
+        <tr class="thead-dark">
+<!--            <th>번호</th>-->
+            <th>ID</th>
+            <th>바코드</th>
+            <th>생성일시</th>
+        </tr>
+        </thead>
+        <tbody id="mytable">
+        {% if barcode_list %}
+        {% for barcode in barcode_list %}
+        <tr>
+<!--            <td>{{ forloop.counter }}</td>-->
+            <td>{{ barcode.id }}</td>
+            <td>{{ barcode.barcode }}</td>
+            <td>{{ barcode.create_date|date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">데이터가 없습니다.</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+<!-- jQuery JS -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+<!-- puser -->
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+<!-- moment-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" crossorigin="anonymous"></script>
+
+<script>
+
+    // Enable pusher logging - don't include this in production
+    Pusher.logToConsole = true;
+
+    var pusher = new Pusher('af1394a6d38f4e31ac54', {
+      cluster: 'ap3'
+    });
+
+    var channel = pusher.subscribe('my-channel');
+    channel.bind('my-event', function(data) {
+      document.getElementById("mytable");
+      var table = document.getElementById("mytable");
+      var row = table.insertRow(0);
+      var cell1 = row.insertCell(0);
+      var cell2 = row.insertCell(1);
+      var cell3 = row.insertCell(2);
+      cell1.innerHTML = data["id"];
+      cell2.innerHTML = data["barcode"].replace(/\"/g,'');
+      cell3.innerHTML = moment(data["create_date"]).format('YYYY-MM-DD HH:mm:ss');
+    });
+</script>
+</html>
+
