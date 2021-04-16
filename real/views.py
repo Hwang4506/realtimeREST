@@ -5,11 +5,33 @@ import pusher
 from real.serializers import BarcodeSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
-
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 def index(request):
-    barcode_list = Realbar.objects.order_by('-create_date')
-    context = {'barcode_list': barcode_list}
+    # 입력 파라미터
+    page = request.GET.get('page', '1')  # 페이지
+    kw = request.GET.get('kw', '')  # 검색어
+    so = request.GET.get('so', 'recent')  # 정렬기준
+
+    # 정렬
+    if so == 'first':
+        barcode_list = Realbar.objects.order_by('create_date')
+    else:  # recent
+        barcode_list = Realbar.objects.order_by('-create_date')
+
+    # 조회
+    if kw:
+        barcode_list = barcode_list.filter(
+            Q(id__icontains=kw) |  # Id검색
+            Q(barcode__icontains=kw) |  # 바코드검색
+            Q(create_date__icontains=kw) # 생성일시검색
+        ).distinct()
+
+    # 페이징처리
+    paginator = Paginator(barcode_list, 10)  # 페이지당 10개씩 보여주기
+    page_obj = paginator.get_page(page)
+    context = {'barcode_list': page_obj, 'page': page, 'kw': kw, 'so': so}
 
     return render(request, 'real/barcode_list.html', context)
 
